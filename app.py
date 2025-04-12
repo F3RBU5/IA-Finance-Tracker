@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from io import StringIO
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 st.set_page_config(page_title="Finanza Intelligente", layout="wide")
 st.title("\U0001F4B8 Finanza Intelligente – Analisi Spese Personali")
@@ -37,12 +38,27 @@ if uploaded_file:
 
     df['categoria'] = df['descrizione'].apply(assegna_categoria)
 
-    st.markdown("## ✏️ Modifica categoria manuale")
-    row_idx = st.number_input("Numero riga da modificare (0-based):", min_value=0, max_value=len(df)-1, value=0)
-    nuova_cat = st.selectbox("Nuova categoria", options=list(categorie_keywords.keys()))
-    if st.button("Applica modifica categoria"):
-        df.at[row_idx, 'categoria'] = nuova_cat
-        st.success(f"Categoria aggiornata per riga {row_idx}")
+    st.markdown("## ✏️ Modifica categoria direttamente nella tabella")
+
+    editable_df = df[['data', 'descrizione', 'importo', 'categoria']].copy()
+    gb = GridOptionsBuilder.from_dataframe(editable_df)
+    gb.configure_column("categoria", editable=True, cellEditor="agSelectCellEditor", 
+                        cellEditorParams={"values": list(categorie_keywords.keys())})
+    gb.configure_grid_options(domLayout='normal')
+    grid_options = gb.build()
+
+    grid_response = AgGrid(
+        editable_df,
+        gridOptions=grid_options,
+        update_mode=GridUpdateMode.MANUAL,
+        height=400,
+        fit_columns_on_grid_load=True,
+        allow_unsafe_jscode=True,
+        theme='alpine'
+    )
+
+    modified_df = grid_response['data']
+    df['categoria'] = modified_df['categoria']
 
     st.markdown("## 📊 Grafico spese per categoria")
     cat_summary = df.groupby('categoria')['importo'].sum().reset_index()
