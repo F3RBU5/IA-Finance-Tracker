@@ -4,6 +4,9 @@ import plotly.express as px
 from io import StringIO
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
+# aggiorno per forzare deploy
+
+
 st.set_page_config(page_title="Finanza Intelligente", layout="wide")
 st.title("\U0001F4B8 Finanza Intelligente – Analisi Spese Personali")
 
